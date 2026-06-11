@@ -97,7 +97,7 @@ export const translations = {
       fallback: "I hear you. I am here with you. Focus on your breathing for a moment and remember you are safe.",
       helloReply: "Hello! I am here to help you find calm. How are you feeling?",
       breathingReply: "Let's use the 4-4-4 breathing technique. Inhale for 4 seconds, hold for 4, exhale for 4. Try it with me.",
-      securedReply: "The checking loop is just anxiety talking. Trust your memory. You can look at your Evidence Vault or your Dashboard to see your secured actions whenever you are ready.",
+      securedReply: "You already secured it. The checking loop is just anxiety talking. Trust your memory. You can look at your Evidence Vault or your Dashboard to see your secured actions whenever you are ready.",
       pendingReply: "I noticed that this action is still pending. Take your time, and when you are ready, you can go to your Dashboard to perform your mindful check-in.",
       phaseInhale: "Inhale",
       phaseHold: "Hold",

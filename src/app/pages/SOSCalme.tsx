@@ -22,32 +22,34 @@ const INIT = [
   { id: "a0", from: "ai" as const, time: now(), text: "Hi, take a deep breath. Your mind is here, your home is safe. How can I support you right now?" },
 ];
 
-function getBotResponse(text: string, cards: UnifiedCard[], ts: T["sos"]): { reply: string; triggerBreath: boolean } {
+function getBotResponse(text: string, cards: UnifiedCard[], t: T): { reply: string; triggerBreath: boolean } {
   const lower = text.toLowerCase();
-  const kw = (ts as typeof ts & { keywords: { anxiety: string[]; routine: string[] } }).keywords;
+  const kw = (t.sos as typeof t.sos & { keywords: { anxiety: string[]; routine: string[] } }).keywords;
 
   if (kw.anxiety.some(w => lower.includes(w)))
-    return { reply: ts.breathingReply, triggerBreath: true };
+    return { reply: t.sos.breathingReply, triggerBreath: true };
 
   if (kw.routine.some(w => lower.includes(w))) {
     let bestCard: UnifiedCard | null = null;
     let bestScore = 0;
     for (const card of cards) {
-      const words = card.label.toLowerCase().split(" ").filter(w => w.length > 2);
+      const translatedLabel = ((t.cards ?? {}) as Record<string, { label: string }>)[card.id]?.label ?? "";
+      const labelText = [card.label, translatedLabel, card.description ?? ""].join(" ").toLowerCase();
+      const words = labelText.split(" ").filter(w => w.length > 2);
       const score = words.filter(w => lower.includes(w)).length;
       if (score > 0 && score > bestScore) { bestScore = score; bestCard = card; }
     }
     if (bestCard) {
       const isSecured = bestCard.status === "Secure";
-      return { reply: isSecured ? ts.securedReply : ts.pendingReply, triggerBreath: false };
+      return { reply: isSecured ? t.sos.securedReply : t.sos.pendingReply, triggerBreath: false };
     }
-    return { reply: ts.pendingReply, triggerBreath: false };
+    return { reply: t.sos.pendingReply, triggerBreath: false };
   }
 
   if (["hello", "hi", "hey", "bonjour", "hola", "hallo", "salut", "你好"].some(w => lower.includes(w)))
-    return { reply: ts.helloReply, triggerBreath: false };
+    return { reply: t.sos.helloReply, triggerBreath: false };
 
-  return { reply: ts.fallback, triggerBreath: false };
+  return { reply: t.sos.fallback, triggerBreath: false };
 }
 
 const MAX_ROUNDS = 2;
@@ -110,10 +112,10 @@ function now() {
   return new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
 }
 
-function useChat(onBreathing: () => void, cards: UnifiedCard[], ts: T["sos"]) {
+function useChat(onBreathing: () => void, cards: UnifiedCard[], t: T) {
   type ChatMessage = { id: string; from: "ai" | "user"; time: string; text: string };
   const [msgs, setMsgs] = useState<ChatMessage[]>(() => ([
-    { id: "a0", from: "ai", time: now(), text: ts.greeting as string },
+    { id: "a0", from: "ai", time: now(), text: t.sos.greeting as string },
   ] as ChatMessage[]));
   const [draft, setDraft] = useState("");
   const endRef = useRef<HTMLDivElement>(null);
@@ -147,7 +149,7 @@ function useChat(onBreathing: () => void, cards: UnifiedCard[], ts: T["sos"]) {
       textAreaRef.current.style.height = "auto";
       textAreaRef.current.style.height = "40px";
     }
-    const { reply, triggerBreath } = getBotResponse(input, cards, ts);
+    const { reply, triggerBreath } = getBotResponse(input, cards, t);
     setTimeout(() => {
       setMsgs((prev: ChatMessage[]) => [...prev, { id: `a${Date.now()}`, from: "ai", time: now(), text: reply }]);
       if (triggerBreath) setTimeout(onBreathing, 500);
@@ -177,7 +179,7 @@ export function SOSCalme() {
   const [showSettings, setShowSettings] = useState(false);
   const { started, completed, round, start, restart, pidx, secs } = useBreathing();
   const { cards } = useUnifiedCards();
-  const { msgs, draft, setDraft, send, endRef, messagesRef, textAreaRef, adjustTextareaHeight } = useChat(start, cards, t.sos);
+  const { msgs, draft, setDraft, send, endRef, messagesRef, textAreaRef, adjustTextareaHeight } = useChat(start, cards, t);
   const { addAnxietyDeescalated, addCalmMinutes } = useMetrics();
 
   useEffect(() => {
