@@ -293,7 +293,7 @@ export const translations = {
       fallback: "Je vous entends. Je suis là avec vous. Concentrez-vous sur votre respiration et rappelez-vous que vous êtes en sécurité.",
       helloReply: "Bonjour ! Je suis là pour vous aider à trouver le calme. Comment vous sentez-vous ?",
       breathingReply: "Utilisons la technique 4-4-4. Inspirez 4 secondes, retenez 4, expirez 4. Essayons ensemble.",
-      securedReply: "La boucle de vérification n'est que de l'anxiété. Faites confiance à votre mémoire. Vous pouvez consulter votre coffre ou votre tableau de bord.",
+      securedReply: "Cette action est sécurisée. La boucle de vérification n'est que de l'anxiété. Faites confiance à votre mémoire. Vous pouvez consulter votre coffre ou votre tableau de bord.",
       pendingReply: "J'ai remarqué que cette action est encore en attente. Prenez votre temps, puis rendez-vous sur votre tableau de bord.",
       phaseInhale: "Inspirer",
       phaseHold: "Retenir",
