@@ -7,6 +7,7 @@ import { CheckCard } from "../components/CheckCard";
 import { StartNewSessionButton } from "../components/StartNewSessionButton";
 import { AddCheckModal } from "../components/AddCheckModal";
 import { VoiceNoteRecorder } from "../components/VoiceNoteRecorder";
+import { SettingsPopover } from "../components/SettingsPopover";
 import { useUnifiedCards } from "../contexts/UnifiedCardsContext";
 import { useMetrics } from "../contexts/MetricsContext";
 import { useIsMobile } from "../hooks/useIsMobile";
@@ -17,7 +18,7 @@ import {
   DoorOpen, Flame, AppWindow, Lightbulb,
   CheckCircle2, Clock, Search, Shield,
   Camera, X, Trash2,
-  HeartPulse, Settings2, ChevronRight, Plus, Leaf,
+  HeartPulse, Settings, Settings2, ChevronRight, Plus, Leaf,
   Plug, Droplets, Car, Zap,
 } from "lucide-react";
 
@@ -324,6 +325,7 @@ function MobileAnchorSheet({ cardLabel, initialSecured, initialPhoto, initialAud
 export function Dashboard() {
   const [active, setActive] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const { cards, updateCardStatus, updateCard, addCard, removeCard } = useUnifiedCards();
   const { addMindfulMoments, addProofConsulted, setSecuredTotal } = useMetrics();
@@ -331,6 +333,7 @@ export function Dashboard() {
   const nav = useNavigate();
   const { t } = useLang();
   const { userName } = useUserProfile();
+  const avatar = userName ? userName.charAt(0).toUpperCase() : "A";
 
   const allCards = useMemo(() => {
     return cards
@@ -444,9 +447,21 @@ export function Dashboard() {
             <span style={{ fontSize: 16, fontWeight: 600, color: "#2C3531", letterSpacing: "-0.025em" }}>Memento</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+              <button
+                type="button"
+                onClick={() => setShowSettings(true)}
+                style={{ width: 36, height: 36, borderRadius: 11, background: "transparent", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#4A6B5D", transition: "background 0.2s" }}
+                onMouseEnter={e => (e.currentTarget.style.background = "rgba(74,107,93,0.08)")}
+                onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+              >
+                <Settings size={18} strokeWidth={1.8} />
+              </button>
+              {showSettings && <SettingsPopover onClose={() => setShowSettings(false)} direction="down" />}
+            </div>
             <LanguageSelector compact />
             <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg,#7EA896,#4A6B5D)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <span style={{ fontSize: 12, fontWeight: 600, color: "#fff" }}>A</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: "#fff" }}>{avatar}</span>
             </div>
           </div>
         </header>

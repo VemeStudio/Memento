@@ -82,7 +82,7 @@ export function LanguageSelector({ compact = false }: { compact?: boolean }) {
           border: "1px solid rgba(44,53,49,0.10)",
           boxShadow: "0 12px 36px rgba(44,53,49,0.15), 0 2px 8px rgba(44,53,49,0.07)",
           overflow: "hidden",
-          zIndex: 200,
+          zIndex: 9999,
           minWidth: compact ? 190 : undefined,
           animation: compact ? "langSlideDown 0.17s cubic-bezier(0.34,1.1,0.64,1) both" : "langSlideUp 0.17s cubic-bezier(0.34,1.1,0.64,1) both",
           fontFamily: "var(--font-family)",

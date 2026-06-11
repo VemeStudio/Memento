@@ -1,4 +1,5 @@
 import { Link } from "react-router";
+import { useUserProfile } from "../contexts/UserProfileContext";
 import { X, Leaf, LayoutDashboard, HeartPulse, UserCircle } from "lucide-react";
 
 const navItems = [
@@ -13,6 +14,9 @@ interface Props {
 }
 
 export function MobileSidebar({ open, onClose }: Props) {
+  const { userName } = useUserProfile();
+  const avatar = userName ? userName.charAt(0).toUpperCase() : "A";
+
   return (
     <>
       <div
@@ -50,10 +54,10 @@ export function MobileSidebar({ open, onClose }: Props) {
 
         <div style={{ padding: "16px 20px 32px", display: "flex", alignItems: "center", gap: 10, borderTop: "1px solid rgba(44,53,49,0.08)" }}>
           <div style={{ width: 34, height: 34, borderRadius: "50%", background: "linear-gradient(135deg,#7EA896,#4A6B5D)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <span style={{ fontSize: 13, fontWeight: 600, color: "#fff" }}>A</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: "#fff" }}>{avatar}</span>
           </div>
           <div>
-            <p style={{ fontSize: 13, fontWeight: 500, color: "#2C3531" }}>Alex</p>
+            <p style={{ fontSize: 13, fontWeight: 500, color: "#2C3531" }}>{userName || "Alex"}</p>
             <p style={{ fontSize: 11, color: "#7A8A84" }}>Free plan</p>
           </div>
         </div>

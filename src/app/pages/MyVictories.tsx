@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { useMetrics } from "../contexts/MetricsContext";
 import { Sidebar } from "../components/Sidebar";
 import { MobileNav } from "../components/MobileNav";
 import { useIsMobile } from "../hooks/useIsMobile";
-import { Clock, Eye, HeartPulse, Sparkles, CheckCircle, Wind, Leaf } from "lucide-react";
+import { SettingsPopover } from "../components/SettingsPopover";
+import { Clock, Eye, HeartPulse, Sparkles, CheckCircle, Wind, Leaf, Settings } from "lucide-react";
 import { LanguageSelector } from "../components/LanguageSelector";
 import { useLang } from "../contexts/LangContext";
 
@@ -19,6 +21,7 @@ const METRIC_ICONS = {
 
 export function MyVictories() {
   const isMobile = useIsMobile();
+  const [showSettings, setShowSettings] = useState(false);
   const { t } = useLang();
 
   const { metrics } = useMetrics();
@@ -48,7 +51,21 @@ export function MyVictories() {
               <p style={{ fontSize: 11, color: "#7A8A84" }}>{t.victories.subtitle}</p>
             </div>
           </div>
-          <LanguageSelector compact />
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+              <button
+                type="button"
+                onClick={() => setShowSettings(true)}
+                style={{ width: 36, height: 36, borderRadius: 11, background: "transparent", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#4A6B5D", transition: "background 0.2s" }}
+                onMouseEnter={e => (e.currentTarget.style.background = "rgba(74,107,93,0.08)")}
+                onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+              >
+                <Settings size={18} strokeWidth={1.8} />
+              </button>
+              {showSettings && <SettingsPopover onClose={() => setShowSettings(false)} direction="down" />}
+            </div>
+            <LanguageSelector compact />
+          </div>
         </header>
 
         <div style={{ flex: 1, overflowY: "auto", padding: "20px 18px", paddingBottom: 96 }}>

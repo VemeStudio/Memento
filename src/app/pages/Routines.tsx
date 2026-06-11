@@ -2,12 +2,13 @@ import { useState, useMemo } from "react";
 import { Sidebar } from "../components/Sidebar";
 import { LanguageSelector } from "../components/LanguageSelector";
 import { MobileNav } from "../components/MobileNav";
+import { SettingsPopover } from "../components/SettingsPopover";
 import { useIsMobile } from "../hooks/useIsMobile";
 import { useUnifiedCards } from "../contexts/UnifiedCardsContext";
 import { getIconById } from "../utils/iconMapping";
 import { useLang } from "../contexts/LangContext";
 import {
-  Check, Plus, Leaf, Trash2,
+  Check, Plus, Leaf, Trash2, Settings,
 } from "lucide-react";
 
 
@@ -61,6 +62,7 @@ export function Routines() {
     cards.filter((c) => c.isActive).map((c) => c.id)
   );
   const [saved, setSaved] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   function toggle(id: string)     { toggleCardVisibility(id); }
   function toggleItem(id: string) { setSelItems(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]); }
@@ -96,7 +98,21 @@ export function Routines() {
               <p style={{ fontSize: 11, color: "#7A8A84" }}>{t.routines.mobileSubtitle}</p>
             </div>
           </div>
-          <LanguageSelector compact />
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+              <button
+                type="button"
+                onClick={() => setShowSettings(true)}
+                style={{ width: 36, height: 36, borderRadius: 11, background: "transparent", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#4A6B5D", transition: "background 0.2s" }}
+                onMouseEnter={e => (e.currentTarget.style.background = "rgba(74,107,93,0.08)")}
+                onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+              >
+                <Settings size={18} strokeWidth={1.8} />
+              </button>
+              {showSettings && <SettingsPopover onClose={() => setShowSettings(false)} direction="down" />}
+            </div>
+            <LanguageSelector compact />
+          </div>
         </header>
 
         {/* Scrollable body — active checks first, builder below */}

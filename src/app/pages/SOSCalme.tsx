@@ -4,7 +4,8 @@ import { useUnifiedCards, type UnifiedCard } from "../contexts/UnifiedCardsConte
 import { Sidebar } from "../components/Sidebar";
 import { MobileNav } from "../components/MobileNav";
 import { useIsMobile } from "../hooks/useIsMobile";
-import { Send, Heart, Leaf } from "lucide-react";
+import { SettingsPopover } from "../components/SettingsPopover";
+import { Send, Heart, Leaf, Settings } from "lucide-react";
 import { LanguageSelector } from "../components/LanguageSelector";
 import { useLang } from "../contexts/LangContext";
 import type { T } from "../i18n/translations";
@@ -110,28 +111,50 @@ function now() {
 }
 
 function useChat(onBreathing: () => void, cards: UnifiedCard[], ts: T["sos"]) {
-  const [msgs, setMsgs] = useState(() => [
-    { id: "a0", from: "ai" as const, time: now(), text: ts.greeting },
-  ]);
+  type ChatMessage = { id: string; from: "ai" | "user"; time: string; text: string };
+  const [msgs, setMsgs] = useState<ChatMessage[]>(() => ([
+    { id: "a0", from: "ai", time: now(), text: ts.greeting as string },
+  ] as ChatMessage[]));
   const [draft, setDraft] = useState("");
   const endRef = useRef<HTMLDivElement>(null);
+  const messagesRef = useRef<HTMLDivElement>(null);
+  const textAreaRef = useRef<HTMLTextAreaElement>(null);
+  const hasMountedRef = useRef(false);
+
+  useEffect(() => {
+    if (!hasMountedRef.current) {
+      hasMountedRef.current = true;
+      return;
+    }
+    const container = messagesRef.current;
+    if (container) {
+      container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
+    }
+  }, [msgs]);
+
+  const adjustTextareaHeight = (target: HTMLTextAreaElement) => {
+    target.style.height = "auto";
+    target.style.height = Math.min(target.scrollHeight, 120) + "px";
+  };
 
   function send() {
     const input = draft.trim();
     if (!input) return;
     const stamp = now();
-    setMsgs(p => [...p, { id: `u${Date.now()}`, from: "user" as const, time: stamp, text: input }]);
+    setMsgs((prev: ChatMessage[]) => [...prev, { id: `u${Date.now()}`, from: "user", time: stamp, text: input }]);
     setDraft("");
+    if (textAreaRef.current) {
+      textAreaRef.current.style.height = "auto";
+      textAreaRef.current.style.height = "40px";
+    }
     const { reply, triggerBreath } = getBotResponse(input, cards, ts);
     setTimeout(() => {
-      setMsgs(p => [...p, { id: `a${Date.now()}`, from: "ai" as const, time: now(), text: reply }]);
-      endRef.current?.scrollIntoView({ behavior: "smooth" });
+      setMsgs((prev: ChatMessage[]) => [...prev, { id: `a${Date.now()}`, from: "ai", time: now(), text: reply }]);
       if (triggerBreath) setTimeout(onBreathing, 500);
     }, 900);
-    setTimeout(() => endRef.current?.scrollIntoView({ behavior: "smooth" }), 60);
   }
 
-  return { msgs, draft, setDraft, send, endRef };
+  return { msgs, draft, setDraft, send, endRef, messagesRef, textAreaRef, adjustTextareaHeight };
 }
 
 export function SOSCalme() {
@@ -151,9 +174,10 @@ export function SOSCalme() {
     Rest:   t.sos.stepRest,
   };
 
+  const [showSettings, setShowSettings] = useState(false);
   const { started, completed, round, start, restart, pidx, secs } = useBreathing();
   const { cards } = useUnifiedCards();
-  const { msgs, draft, setDraft, send, endRef } = useChat(start, cards, t.sos);
+  const { msgs, draft, setDraft, send, endRef, messagesRef, textAreaRef, adjustTextareaHeight } = useChat(start, cards, t.sos);
   const { addAnxietyDeescalated, addCalmMinutes } = useMetrics();
 
   useEffect(() => {
@@ -181,11 +205,11 @@ export function SOSCalme() {
     const auraSize   = 188;
 
     return (
-      <div style={{ display: "flex", flexDirection: "column", height: "100dvh", background: "linear-gradient(170deg,#EFF4F1 0%,#F5F3EE 55%,#EEF0F4 100%)", fontFamily: "var(--font-family)", overflow: "hidden" }}>
+      <div style={{ display: "flex", flexDirection: "column", minHeight: "100dvh", background: "linear-gradient(170deg,#EFF4F1 0%,#F5F3EE 55%,#EEF0F4 100%)", fontFamily: "var(--font-family)", overflowY: "auto" }}>
         <style>{animations}</style>
 
         {/* Mobile header */}
-        <header style={{ padding: "16px 20px 13px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid rgba(44,53,49,0.08)", background: "rgba(239,244,241,0.92)", backdropFilter: "blur(10px)", flexShrink: 0 }}>
+        <header style={{ position: "relative", zIndex: 50, padding: "16px 20px 13px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid rgba(44,53,49,0.08)", background: "rgba(239,244,241,0.92)", backdropFilter: "blur(10px)", flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
             <div style={{ width: 30, height: 30, borderRadius: 9, background: "#4A6B5D", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
               <Leaf size={13} color="#fff" strokeWidth={1.9} />
@@ -195,7 +219,21 @@ export function SOSCalme() {
               <p style={{ fontSize: 11, color: "#7A8A84" }}>{t.sos.mobileSubtitle}</p>
             </div>
           </div>
-          <LanguageSelector compact />
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+              <button
+                type="button"
+                onClick={() => setShowSettings(true)}
+                style={{ width: 36, height: 36, borderRadius: 11, background: "transparent", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#4A6B5D", transition: "background 0.2s" }}
+                onMouseEnter={e => (e.currentTarget.style.background = "rgba(74,107,93,0.08)")}
+                onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+              >
+                <Settings size={18} strokeWidth={1.8} />
+              </button>
+              {showSettings && <SettingsPopover onClose={() => setShowSettings(false)} direction="down" />}
+            </div>
+            <LanguageSelector compact />
+          </div>
         </header>
 
         {/* Breathing widget — compact */}
@@ -298,14 +336,14 @@ export function SOSCalme() {
           </div>
         </div>
 
-        {/* AI chat — fills remaining height */}
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", minHeight: 0 }}>
+        {/* AI chat — larger mobile panel */}
+        <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", minHeight: 420, overflow: "hidden" }}>
           <div style={{ padding: "10px 20px 6px", flexShrink: 0 }}>
             <p style={{ fontSize: 9, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#7A8A84" }}>{t.sos.aiAssistant}</p>
           </div>
 
           {/* Messages */}
-          <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px 8px", display: "flex", flexDirection: "column", gap: 14, minHeight: 0 }}>
+          <div ref={messagesRef} style={{ flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch", padding: "12px 16px 8px", display: "flex", flexDirection: "column", gap: 14, minHeight: 0 }}>
             {/* Session marker */}
             <div style={{ display: "flex", justifyContent: "center" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 5, background: "#EAF2EE", borderRadius: 20, padding: "3px 11px" }}>
@@ -344,16 +382,18 @@ export function SOSCalme() {
           {/* Input — sticky above bottom nav */}
           <div style={{ borderTop: "1px solid rgba(44,53,49,0.07)", padding: "10px 14px", display: "flex", gap: 8, alignItems: "flex-end", background: "rgba(245,243,238,0.9)", backdropFilter: "blur(10px)", paddingBottom: "calc(10px + env(safe-area-inset-bottom, 0px))", flexShrink: 0, marginBottom: 64 }}>
             <textarea
-              value={draft} onChange={e => setDraft(e.target.value)}
+              ref={textAreaRef}
+              value={draft} onChange={e => { setDraft(e.target.value); }}
+              onInput={e => adjustTextareaHeight(e.currentTarget)}
               onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
               placeholder={t.sos.chatPlaceholder}
-              rows={2}
-              style={{ flex: 1, background: "rgba(255,255,255,0.9)", border: "1px solid rgba(44,53,49,0.09)", borderRadius: 14, padding: "10px 13px", fontSize: 14, color: "#2C3531", resize: "none", outline: "none", fontFamily: "var(--font-family)", lineHeight: 1.55 }}
+              rows={1}
+              style={{ flex: 1, minHeight: 40, maxHeight: 120, overflowY: "auto", background: "#fff", border: "1px solid rgba(44,53,49,0.09)", borderRadius: 20, padding: "12px 14px", fontSize: 14, color: "#2C3531", resize: "none", outline: "none", fontFamily: "var(--font-family)", lineHeight: 1.5 }}
               onFocus={e => (e.target.style.borderColor = "#4A6B5D")}
               onBlur={e => (e.target.style.borderColor = "rgba(44,53,49,0.09)")}
             />
             <button onClick={send}
-              style={{ width: 42, height: 42, borderRadius: "50%", background: draft.trim() ? "#4A6B5D" : "#E8EDEA", border: "none", cursor: draft.trim() ? "pointer" : "default", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "background 0.2s", marginBottom: 2 }}
+              style={{ width: 42, height: 42, borderRadius: "50%", background: draft.trim() ? "#4A6B5D" : "#E8EDEA", border: "none", cursor: draft.trim() ? "pointer" : "default", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "background 0.2s" }}
             >
               <Send size={15} strokeWidth={1.8} color={draft.trim() ? "#fff" : "#B5C5BE"} />
             </button>
