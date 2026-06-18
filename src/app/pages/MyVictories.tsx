@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useMetrics } from "../contexts/MetricsContext";
+import { useUserProfile } from "../contexts/UserProfileContext";
 import { Sidebar } from "../components/Sidebar";
 import { MobileNav } from "../components/MobileNav";
 import { useIsMobile } from "../hooks/useIsMobile";
@@ -25,13 +26,14 @@ export function MyVictories() {
   const { t } = useLang();
 
   const { metrics } = useMetrics();
+  const { confidenceDays } = useUserProfile();
   const { mindfulMoments, proofsConsulted, anxietyDeescalated, daysOfTrust, securedActions, calmMinutes } = metrics;
 
   const METRICS = [
     { id: "mindful",  ...METRIC_ICONS.mindful,  label: t.victories.mindfulLabel, subtitle: t.victories.mindfulSub,  value: `${mindfulMoments}s`  },
     { id: "proofs",   ...METRIC_ICONS.proofs,   label: t.victories.proofsLabel,  subtitle: t.victories.proofsSub,   value: `${proofsConsulted}`   },
     { id: "anxiety",  ...METRIC_ICONS.anxiety,  label: t.victories.anxietyLabel, subtitle: t.victories.anxietySub,  value: `${anxietyDeescalated}` },
-    { id: "trust",    ...METRIC_ICONS.trust,    label: t.victories.trustLabel,   subtitle: t.victories.trustSub,    value: `${daysOfTrust}`        },
+    { id: "trust",    ...METRIC_ICONS.trust,    label: t.victories.trustLabel,   subtitle: t.victories.trustSub,    value: `${confidenceDays}`     },
     { id: "secured",  ...METRIC_ICONS.secured,  label: t.victories.securedLabel, subtitle: t.victories.securedSub,  value: `${securedActions.completed}/${securedActions.total}` },
     { id: "calm",     ...METRIC_ICONS.calm,     label: t.victories.calmLabel,    subtitle: t.victories.calmSub,     value: `${calmMinutes}`        },
   ];

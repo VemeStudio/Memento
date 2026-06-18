@@ -28,54 +28,11 @@ export function StartNewSessionButton({
   label = "Start a new session",
   compact = false,
 }: StartNewSessionButtonProps) {
-  const { resetAllStatuses } = useUnifiedCards();
-
-  /**
-   * ════════════════════════════════════════════════════════════════
-   * HANDLE START NEW SESSION
-   *
-   * EXECUTION FLOW:
-   * 1. Reads existing cards array from localStorage ("memento_cards")
-   * 2. Loops through ALL cards (default + custom)
-   * 3. Resets each card's status to "Pending"
-   * 4. Clears lastChecked timestamps
-   * 5. Saves updated array back to localStorage
-   * 6. Refreshes the page to reset React state
-   *
-   * IMPORTANT: Cards are NOT deleted, only their progress is reset
-   * ════════════════════════════════════════════════════════════════
-   */
-  const handleStartNewSession = () => {
-    try {
-      // Optional: Confirm before reset (uncomment if desired)
-      // const confirmed = window.confirm(
-      //   "This will reset all check statuses to 'Pending'. Your custom cards will be kept. Continue?"
-      // );
-      // if (!confirmed) return;
-
-      /**
-       * Reset all card statuses to "Pending"
-       * This function:
-       * 1. Loops through cards array
-       * 2. Sets status: "Pending" for each card
-       * 3. Clears lastChecked timestamp
-       * 4. Saves to localStorage ("memento_cards")
-       */
-      resetAllStatuses();
-
-      // Wait a moment for localStorage to save, then refresh
-      setTimeout(() => {
-        window.location.reload();
-      }, 100);
-    } catch (error) {
-      console.error("Failed to reset session data:", error);
-      // Optionally show an error message to the user
-    }
-  };
+  const { startNewSession } = useUnifiedCards();
 
   return (
     <button
-      onClick={handleStartNewSession}
+      onClick={startNewSession}
       className={className}
       style={{
         display: "flex",

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
 import { type LucideIcon, DoorOpen, Flame, AppWindow, Lightbulb } from "lucide-react";
 
 /**
@@ -29,6 +29,7 @@ interface UnifiedCardsContextValue {
   toggleCardVisibility: (id: string) => void;
   saveActiveItems: (activeIds: string[]) => void;
   resetAllStatuses: () => void;
+  startNewSession: () => void;
 }
 
 const UnifiedCardsContext = createContext<UnifiedCardsContextValue | undefined>(undefined);
@@ -39,6 +40,7 @@ const UnifiedCardsContext = createContext<UnifiedCardsContextValue | undefined>(
 const STORAGE_KEY = "memento_cards";
 const DELETED_IDS_KEY = "memento_deleted_ids";
 const MEDIA_PREFIX = "memento_media_";
+const DAILY_RESET_MS = 24 * 60 * 60 * 1000;
 
 function saveMedia(id: string, photo: string | undefined, audio: string | undefined) {
   try {
@@ -272,7 +274,7 @@ export function UnifiedCardsProvider({ children }: { children: ReactNode }) {
    * KEEPS all cards (default + custom) intact
    * ════════════════════════════════════════════════════════════════
    */
-  const resetAllStatuses = () => {
+  const resetAllStatuses = useCallback(() => {
     setCards((prev) => {
       const clean = prev.map((card) => {
         saveMedia(card.id, undefined, undefined);
@@ -280,7 +282,45 @@ export function UnifiedCardsProvider({ children }: { children: ReactNode }) {
       });
       return clean;
     });
-  };
+  }, []);
+
+  const startNewSession = useCallback(() => {
+    resetAllStatuses();
+
+    setTimeout(() => {
+      window.location.reload();
+    }, 100);
+  }, [resetAllStatuses]);
+
+  useEffect(() => {
+    try {
+      const storedLastSession = localStorage.getItem(LAST_SESSION_DATE_KEY);
+      const now = new Date();
+
+      if (!storedLastSession) {
+        localStorage.setItem(LAST_SESSION_DATE_KEY, now.toISOString());
+        return;
+      }
+
+      const lastSessionDate = new Date(storedLastSession);
+      if (Number.isNaN(lastSessionDate.getTime())) {
+        localStorage.setItem(LAST_SESSION_DATE_KEY, now.toISOString());
+        return;
+      }
+
+      const calendarDayChanged =
+        lastSessionDate.getFullYear() !== now.getFullYear() ||
+        lastSessionDate.getMonth() !== now.getMonth() ||
+        lastSessionDate.getDate() !== now.getDate();
+      const twentyFourHoursPassed = now.getTime() - lastSessionDate.getTime() >= DAILY_RESET_MS;
+
+      if (calendarDayChanged || twentyFourHoursPassed) {
+        startNewSession();
+      }
+    } catch (error) {
+      console.error("Failed to evaluate automatic session reset:", error);
+    }
+  }, [startNewSession]);
 
   return (
     <UnifiedCardsContext.Provider
@@ -293,6 +333,7 @@ export function UnifiedCardsProvider({ children }: { children: ReactNode }) {
         toggleCardVisibility,
         saveActiveItems,
         resetAllStatuses,
+        startNewSession,
       }}
     >
       {children}
